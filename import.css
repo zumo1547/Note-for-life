@@ -1,0 +1,28 @@
+.import-section { margin-top: 28px; }
+.local-file-notice { border: 1px solid #eadfb9; background: #fff9e9; color: #806d39; border-radius: 9px; padding: 10px 12px; font-size: 11px; line-height: 1.7; margin: -10px 0 20px; }
+.import-section .attachment-head { margin-top: 0; }
+.file-drop { margin-top: 15px; min-height: 120px; border: 1px dashed #b8cbb5; background: #eef5e9; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; text-align: center; padding: 15px; cursor: pointer; color: #547459; }
+.file-drop:hover, .file-drop.dragging { border-color: #53835b; background: #e6f1df; }
+.file-drop-icon { font-size: 26px; line-height: 1; }
+.file-drop strong { font-size: 12px; }
+.file-drop small { color: #879c84; font-size: 10px; }
+.import-review { background: #fff; border: 1px solid #d7e5d4; border-radius: 12px; margin-top: 14px; padding: 18px; box-shadow: 0 8px 24px #263d2910; }
+.import-review-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+.import-review h3 { margin: 3px 0 0; font-size: 16px; }
+.import-review>p { font-size: 11px; line-height: 1.7; color: #647767; margin: 12px 0; }
+.import-file-list { display: grid; gap: 6px; }
+.import-file { padding: 8px 10px; border: 1px solid #edf0ea; border-radius: 7px; display: flex; justify-content: space-between; gap: 8px; font-size: 11px; }
+.import-file span:last-child { color: #78907b; white-space: nowrap; }
+.import-comparison { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 14px 0; }
+.import-stat { border: 1px solid #e4ebe0; border-radius: 8px; padding: 9px; background: #f8fbf6; }
+.import-stat strong { display: block; font-size: 17px; color: #3b6445; }
+.import-stat small { display: block; font-size: 10px; color: #859487; }
+.import-review details { font-size: 11px; color: #526d56; }
+.import-review summary { cursor: pointer; font-weight: 600; }
+.import-review pre, .import-ai pre { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; font: 11px/1.7 'DM Sans','Noto Sans Thai',sans-serif; color: #46574a; max-height: 220px; overflow: auto; margin: 9px 0 0; }
+.import-review details pre { padding: 10px; border-radius: 7px; background: #f7f9f5; }
+.import-ai { margin-top: 13px; background: #eff5ec; border: 1px solid #dce9d8; border-radius: 8px; padding: 12px; }
+.import-ai>strong { color: #426c4b; font-size: 11px; }
+.import-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 17px; flex-wrap: wrap; }
+.import-actions button { font-size: 11px; }
+@media (max-width: 520px) { .import-comparison { grid-template-columns: 1fr 1fr 1fr; } .import-stat { padding: 7px; } .import-stat strong { font-size: 14px; } }

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self' data:; connect-src 'self' https: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="theme-color" content="#f7f5ef">
+  <meta name="description" content="สมุดโน้ตสำหรับข้อความจาก PDF และรูปจากคลิปบอร์ด พร้อมผู้ช่วยจัดสรุป">
+  <title>เล่าโน้ต — พื้นที่คิดและจด</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="import.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">✳</div><div><strong>เล่าโน้ต</strong><small>พื้นที่คิดและจด</small></div></div>
+      <button class="primary-button new-note" id="newNote">＋ <span>สร้างโน้ตใหม่</span></button>
+      <label class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="ค้นหาโน้ต..." aria-label="ค้นหาโน้ต"></label>
+      <div class="section-label"><span>โน้ตทั้งหมด</span><span id="noteCount">0</span></div>
+      <div id="noteList" class="note-list" role="list"></div>
+      <div class="sidebar-bottom"><span class="status-dot"></span> เก็บอัตโนมัติในเบราว์เซอร์นี้</div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="breadcrumb"><button class="icon-button menu-button" id="menuButton" aria-label="เปิดรายการโน้ต">☰</button><span>สมุดโน้ต</span><span class="slash">/</span><strong id="breadcrumbTitle">โน้ตใหม่</strong></div>
+        <div class="top-actions"><span class="save-status" id="saveStatus">พร้อมใช้งาน</span><button class="subtle-button" id="exportButton">↧ <span>ส่งออก</span></button><button class="icon-button" id="deleteButton" aria-label="ลบโน้ต" title="ลบโน้ต">⌫</button><button class="icon-button" id="settingsButton" aria-label="ตั้งค่า AI" title="ตั้งค่า AI">⚙</button></div>
+      </header>
+
+      <div class="editor-scroll">
+        <div class="editor-layout">
+          <article class="editor-column">
+            <div class="note-meta"><span class="pill">● พื้นที่ทำงาน</span><span id="dateLabel"></span></div>
+            <input id="titleInput" class="title-input" type="text" placeholder="ตั้งชื่อโน้ตของคุณ..." aria-label="ชื่อโน้ต" maxlength="160">
+            <div class="editor-intro">วางข้อความจาก PDF ได้ตรงนี้ ทุกตัวอักษรจะอยู่ครบ และวางรูปจากคลิปบอร์ดได้ทันที</div>
+            <div id="localFileNotice" class="local-file-notice" hidden>หากต้องการโยนไฟล์ PDF ให้เปิดแอปผ่าน <strong>start.cmd</strong> แล้วเข้า <strong>http://127.0.0.1:8765/</strong> ก่อนย้ายหน้าให้สำรองโน้ตเดิมเป็น JSON จากเมนูส่งออก</div>
+            <div class="toolbar" aria-label="เครื่องมือแก้ไข"><button data-insert="heading" title="เพิ่มหัวข้อ">H หัวข้อ</button><button data-insert="bullet" title="เพิ่มรายการ">☷ รายการ</button><button data-insert="quote" title="เพิ่มข้อความอ้างอิง">❝ อ้างอิง</button><span class="toolbar-divider"></span><button id="pasteImageButton" title="วางรูปจากคลิปบอร์ด">▧ วางรูป</button><label class="toolbar-file" title="เพิ่มรูปจากเครื่อง">＋ รูป<input id="imageInput" type="file" accept="image/*" multiple hidden></label><label class="toolbar-file" title="นำเข้าไฟล์ TXT, Markdown หรือ PDF">↥ เพิ่มไฟล์<input id="fileInput" type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" multiple hidden></label></div>
+            <label class="editor-label" for="bodyInput">เนื้อหา</label>
+            <textarea id="bodyInput" spellcheck="true" placeholder="เริ่มจดไอเดีย วางข้อความจาก PDF หรือกด Ctrl+V เพื่อวางรูป..." aria-label="เนื้อหาโน้ต"></textarea>
+            <div class="editor-foot"><span id="wordCount">0 ตัวอักษร</span><span>Ctrl+V เพื่อวาง • Ctrl+S เพื่อบันทึก</span></div>
+            <section class="import-section" aria-labelledby="importHeading">
+              <div class="attachment-head"><div><h2 id="importHeading">นำเข้าและเทียบข้อมูล</h2><p>TXT, Markdown หรือ PDF จะถูกอ่านก่อนเพิ่มลงโน้ต</p></div></div>
+              <label class="file-drop" id="fileDrop"><span class="file-drop-icon">↥</span><strong>ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์</strong><small>รองรับ .txt .md .pdf และรูปภาพ · เลือกหลายไฟล์ได้</small><input id="dropFileInput" type="file" accept=".txt,.md,.pdf,image/*,text/plain,text/markdown,application/pdf" multiple hidden></label>
+              <div id="importReview" class="import-review" hidden><div class="import-review-head"><div><span class="eyebrow">ตรวจข้อมูลก่อนเพิ่ม</span><h3 id="importReviewTitle">ไฟล์ที่อ่านได้</h3></div><button id="dismissImport" class="icon-button small" aria-label="ปิดการนำเข้า">×</button></div><p id="importStatus" role="status"></p><div id="importFileList" class="import-file-list"></div><div id="importComparison" class="import-comparison"></div><details><summary>ดูข้อความที่จะเพิ่ม</summary><pre id="importPreview"></pre></details><div id="importAi" class="import-ai" hidden><strong id="importAiHeading">✳ ผลวิเคราะห์จาก AI</strong><pre id="importAiText"></pre></div><div class="import-actions"><button class="subtle-button" id="addAllImport">เพิ่มข้อความทั้งหมด</button><button class="primary-button" id="addNewImport">เพิ่มเฉพาะข้อมูลใหม่</button></div></div>
+            </section>
+            <div class="attachment-head"><div><h2>รูปประกอบ</h2><p>รูปจากคลิปบอร์ดและไฟล์ของคุณ</p></div><span id="imageCount">0 รูป</span></div>
+            <div class="dropzone" id="dropzone"><div class="drop-icon">▧</div><strong>วางรูปตรงนี้ได้เลย</strong><span>คลิกในช่องเนื้อหาแล้วกด Ctrl+V หรือลากรูปมาวาง</span></div>
+            <div class="image-grid" id="imageGrid"></div>
+          </article>
+
+          <aside class="assistant-panel">
+            <div class="assistant-card"><div class="assistant-heading"><span class="assistant-spark">✳</span><div><h2>ผู้ช่วยคิด</h2><p>ช่วยจัดข้อความให้อ่านง่าย</p></div></div>
+              <p class="assistant-copy">ต้นฉบับของคุณจะอยู่ในช่องเนื้อหาเสมอ ผลลัพธ์จะแสดงแยกไว้ให้เลือกใช้</p>
+              <div class="assist-buttons"><button id="tidyButton">⌁ <span><strong>จัดบรรทัด PDF</strong><small>รวมบรรทัดที่ถูกตัดกลางประโยค</small></span><span>›</span></button><button id="outlineButton">☷ <span><strong>ร่างหัวข้อ</strong><small>มองโครงสร้างของโน้ต</small></span><span>›</span></button><button id="summaryButton">✦ <span><strong>สรุปประเด็น</strong><small>อ่านใจความสำคัญอย่างรวดเร็ว</small></span><span>›</span></button><button id="ideaButton">◎ <span><strong>ต่อยอดไอเดียด้วย AI</strong><small>ใช้โมเดลที่คุณเชื่อมต่อ</small></span><span>›</span></button></div>
+            </div>
+            <div class="result-card" id="resultCard" hidden><div class="result-head"><strong id="resultTitle">ผลลัพธ์</strong><button class="icon-button small" id="closeResult" aria-label="ปิดผลลัพธ์">×</button></div><div id="resultBody" class="result-body"></div><div class="result-actions"><button class="subtle-button" id="copyResult">คัดลอก</button><button class="primary-button" id="useResult">ใช้ผลลัพธ์</button></div></div>
+            <div class="summary-card"><div class="summary-head"><h3>สรุปของโน้ต</h3><button id="editSummary" title="แก้ไขสรุป">✎</button></div><p id="summaryDisplay">ยังไม่มีสรุป กด “สรุปประเด็น” เพื่อเริ่มต้น</p><textarea id="summaryInput" placeholder="เขียนสรุปสั้น ๆ ของคุณที่นี่" hidden></textarea></div>
+            <div class="tip-card"><span>✦ เคล็ดลับ</span><p>ถ้าข้อความจาก PDF ตัดบรรทัดแปลก ๆ ลองใช้ “จัดบรรทัด PDF” แล้วตรวจผลลัพธ์ก่อนเพิ่มลงโน้ต</p></div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="exportModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle"><div class="modal-head"><div><span class="eyebrow">นำงานออกไปใช้</span><h2 id="exportTitle">ส่งออกโน้ต</h2></div><button class="icon-button modal-close" data-close="exportModal" aria-label="ปิด">×</button></div><p>เลือกไฟล์สำหรับโน้ตฉบับเต็ม หรือส่งออกเฉพาะสรุปที่จัดไว้</p><div class="modal-options"><button data-export="markdown"><strong>Markdown (.zip)</strong><small>ข้อความ สรุป และรูปประกอบแยกเป็นไฟล์ ZIP</small></button><button data-export="html"><strong>หน้าเว็บ (.html)</strong><small>เปิดอ่านพร้อมรูปในไฟล์เดียว</small></button><button data-export="summary"><strong>สรุป (.txt)</strong><small>หัวข้อและสรุปแบบไฟล์ข้อความ</small></button><button data-export="backup"><strong>สำรองข้อมูล (.json)</strong><small>สำรองโน้ตนี้พร้อมรูปสำหรับนำเข้าภายหลัง</small></button><label class="import-option"><strong>นำเข้าไฟล์สำรอง (.json)</strong><small>กู้คืนเป็นโน้ตใหม่โดยไม่ทับโน้ตเดิม</small><input id="backupInput" type="file" accept=".json,application/json" hidden></label><button data-export="print"><strong>พิมพ์ / PDF</strong><small>ใช้หน้าต่างพิมพ์ของเบราว์เซอร์</small></button></div></section></div>
+
+  <div class="modal-backdrop" id="settingsModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="modal-head"><div><span class="eyebrow">ผู้ช่วย AI</span><h2 id="settingsTitle">เชื่อมต่อโมเดล</h2></div><button class="icon-button modal-close" data-close="settingsModal" aria-label="ปิด">×</button></div><p>ใส่บริการที่รองรับ Chat Completions เพื่อให้ AI ช่วยสรุป จัดโครง และต่อยอดไอเดีย เมื่อใช้ AI ข้อความโน้ตจะถูกส่งไปยัง endpoint ที่คุณระบุ คีย์อยู่ในหน่วยความจำของหน้านี้เท่านั้น และหายไปเมื่อปิดหน้า</p><label>API endpoint<input id="aiEndpoint" type="url" placeholder="https://.../chat/completions" autocomplete="off"></label><label>ชื่อโมเดล<input id="aiModel" type="text" placeholder="ชื่อโมเดล" autocomplete="off"></label><label>API key<input id="aiKey" type="password" placeholder="ใส่คีย์สำหรับการใช้งานนี้" autocomplete="off"></label><div class="modal-footer"><span id="aiStatus">ยังไม่ได้เชื่อมต่อ</span><button class="primary-button" id="saveAiSettings">ใช้การตั้งค่านี้</button></div></section></div>
+
+  <div id="printContent" class="print-content" aria-hidden="true"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>

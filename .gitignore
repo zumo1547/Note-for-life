@@ -1,0 +1,16 @@
+# Personal study material and exported notes must not enter the public repository.
+PDF/
+*.pdf
+*.txt
+*.json
+*.zip
+backups/
+
+# Local development output and secrets.
+_site/
+node_modules/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
