@@ -19,7 +19,11 @@ export async function extractPdfText(file, onProgress = () => {}) {
         if (typeof item.str !== 'string') continue;
         const x = item.transform?.[4];
         const gap = previous && Number.isFinite(x) ? x - (previous.x + previous.width) : 0;
-        if (text && !text.endsWith('\n') && gap > 3 && !/^\s/.test(item.str)) text += ' ';
+        // PDF.js sometimes emits Thai vowels/tone marks as separate items. Never
+        // insert a space before a combining mark or between adjacent Thai runs.
+        const thaiBoundary = /[\u0e00-\u0e7f]$/.test(text) && /^[\u0e00-\u0e7f]/.test(item.str);
+        const combining = /^\p{M}/u.test(item.str);
+        if (text && !text.endsWith('\n') && gap > 3 && !/^\s/.test(item.str) && !thaiBoundary && !combining) text += ' ';
         text += item.str;
         if (item.hasEOL) text += '\n';
         previous = { x: Number.isFinite(x) ? x : 0, width: item.width || 0 };

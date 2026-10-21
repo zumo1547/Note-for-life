@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { decodeTextBytes } from './text-reader.mjs';
 
 const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 const app = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
@@ -20,4 +21,12 @@ assert.equal(result.added, 2);
 assert.match(result.entries[0].newText, /--- หน้า 1 ---\nข้อมูลใหม่/);
 assert.match(result.entries[0].newText, /--- หน้า 2 ---\nอีกข้อใหม่/);
 
-console.log(`ตรวจผ่าน: อ้างถึง ${usedIds.size} ปุ่ม/ช่องครบ และการเทียบข้อมูลใหม่กับข้อมูลซ้ำถูกต้อง`);
+const thai = 'สรุปเรื่องน้ำ: ก๊าซ อิเล็กทรอนิกส์ ภาษาไทยสระอำ';
+const utf8 = new TextEncoder().encode(thai);
+assert.equal(decodeTextBytes(utf8).text, thai);
+assert.equal(decodeTextBytes(new Uint8Array([0xa1, 0xd2]), 'windows-874').text, 'กา');
+assert.equal(decodeTextBytes(new Uint8Array([0xa1, 0xd2])).text, 'กา');
+assert.ok(html.indexOf('id="addAllImport"') < html.indexOf('id="addNewImport"'));
+assert.ok(html.indexOf('id="summaryButton"') < html.indexOf('id="resultCard"'));
+
+console.log(`ตรวจผ่าน: อ้างถึง ${usedIds.size} ปุ่ม/ช่องครบ ข้อความไทย UTF-8/Windows-874 ครบ และสรุปอยู่ในหน้าหลัก`);

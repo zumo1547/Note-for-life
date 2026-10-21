@@ -66,12 +66,13 @@ async function selectNote(id) {
   $('#titleInput').value = note.title;
   $('#bodyInput').value = note.body;
   $('#summaryInput').value = note.summary;
-  $('#summaryInput').hidden = true;
-  $('#summaryDisplay').hidden = false;
+  $('#summaryInput').hidden = false;
+  $('#summaryDisplay').hidden = true;
   $('#summaryDisplay').textContent = note.summary || 'ยังไม่มีสรุป กด “สรุปประเด็น” เพื่อเริ่มต้น';
   $('#breadcrumbTitle').textContent = note.title || 'โน้ตใหม่';
   $('#dateLabel').textContent = formatDate(note.created);
   $('#resultCard').hidden = true;
+  $('#summaryMethod').textContent = note.summary ? 'บันทึกแล้ว · แก้ไขได้' : 'พร้อมสร้าง';
   updateCount();
   renderList();
   renderImportReview();
@@ -192,7 +193,8 @@ function renderImportReview() {
   $('#importStatus').textContent = pending.status || (hasAi() ? 'อ่านและเทียบข้อมูลแล้ว ตรวจตัวอย่างก่อนเพิ่มลงโน้ต' : 'อ่านและเทียบข้อมูลในเครื่องแล้ว เชื่อม AI ในตั้งค่าเพื่อให้ช่วยวิเคราะห์เพิ่มเติม');
   $('#importFileList').innerHTML = comparison.entries.map(entry => `<div class="import-file"><span>${escapeHtml(entry.name)}</span><span>${entry.kind === 'pdf' ? `PDF · ${entry.pages} หน้า` : 'ข้อความ'} · ใหม่ ${entry.total - entry.repeated}/${entry.total} บรรทัด</span></div>`).join('');
   $('#importComparison').innerHTML = `<div class="import-stat"><strong>${comparison.total}</strong><small>บรรทัดที่อ่านได้</small></div><div class="import-stat"><strong>${comparison.added}</strong><small>ข้อมูลใหม่</small></div><div class="import-stat"><strong>${comparison.repeated}</strong><small>ซ้ำกับโน้ต</small></div>`;
-  $('#importPreview').textContent = comparison.entries.map(entry => `--- ${entry.name} ---\n${entry.text}`).join('\n\n').slice(0, 30000) + (comparison.entries.reduce((n, e) => n + e.text.length, 0) > 30000 ? '\n\n… ตัวอย่างแสดงเพียง 30,000 ตัวอักษร ข้อมูลเต็มยังอยู่' : '');
+  $('#importPreview').value = comparison.entries.map(entry => `--- ${entry.name} ---\n${entry.text}`).join('\n\n');
+  $('#textEncoding').parentElement.hidden = !pending.entries.some(entry => entry.kind === 'text');
   $('#importAi').hidden = !pending.aiText;
   $('#importAiHeading').textContent = pending.aiGenerated ? '✳ ผลวิเคราะห์จาก AI' : '⌁ ประเด็นเบื้องต้นในเครื่อง';
   $('#importAiText').textContent = pending.aiText || '';
@@ -221,7 +223,14 @@ async function stageFiles(fileList) {
           const { extractPdfText } = await import('./pdf-reader.mjs');
           const result = await extractPdfText(file, (current, total) => { pending.status = `อ่าน PDF: ${file.name} หน้า ${current}/${total}`; renderImportReview(); });
           text = result.text; pages = result.pages;
-        } else text = await file.text();
+        } else {
+          const { readTextFile } = await import('./text-reader.mjs');
+          const decoded = await readTextFile(file);
+          text = decoded.text;
+          if (!text.trim()) throw new Error('ไม่พบข้อความในไฟล์');
+          pending.entries.push({ name: file.name, kind, pages, text, bytes: decoded.bytes, encoding: decoded.encoding });
+          continue;
+        }
         if (!text.trim()) throw new Error('ไม่พบข้อความในไฟล์');
         pending.entries.push({ name: file.name, kind, pages, text });
       } catch (error) {
@@ -234,12 +243,12 @@ async function stageFiles(fileList) {
       const note = state.notes.find(item => item.id === noteId);
       const comparison = compareImportedText(note?.body || '', pending.entries);
       pending.aiGenerated = false;
-      pending.aiText = comparison.entries.map(entry => `ไฟล์ ${entry.name}\n${extractPoints(entry.newText || entry.text, 4).map(point => `• ${point}`).join('\n')}`).join('\n\n');
+      pending.aiText = comparison.entries.map(entry => `ไฟล์ ${entry.name}\n${extractPoints(entry.text, 4).map(point => `• ${point}`).join('\n')}`).join('\n\n');
       pending.status = 'เทียบข้อมูลแล้ว ตรวจตัวอย่างก่อนเพิ่มลงโน้ต';
       renderImportReview();
-      await analyzeStagedImport(noteId);
     } else if (!pending.entries.length) state.pendingImports.delete(noteId);
   } finally { state.importBusy = false; renderImportReview(); }
+  if (pending.entries.length && hasAi()) analyzeStagedImport(noteId);
 }
 async function analyzeStagedImport(noteId) {
   const pending = state.pendingImports.get(noteId);
@@ -254,6 +263,7 @@ async function analyzeStagedImport(noteId) {
     const selected = chunks.slice(0, 20);
     const results = [];
     for (let index = 0; index < selected.length; index++) {
+      if (state.pendingImports.get(noteId) !== pending) return;
       pending.status = `AI วิเคราะห์ส่วน ${index + 1}/${selected.length}...`;
       renderImportReview();
       const hasPdf = pending.entries.some(entry => entry.kind === 'pdf');
@@ -311,9 +321,32 @@ function extractPoints(text, max = 5) {
   return candidates.filter(line => { const key = line.toLocaleLowerCase().slice(0, 80); if (seen.has(key)) return false; seen.add(key); return true; }).slice(0, max).map(line => line.slice(0, 190));
 }
 function localSummary(text) {
-  const sections = text.split(/(?=^--- นำเข้าจาก:)/m).filter(Boolean);
-  const points = sections.flatMap(section => extractPoints(section, sections.length > 1 ? 3 : 5));
-  return [...new Set(points)].slice(0, 12).map(point => `• ${point}`).join('\n');
+  const clean = text.split(/\r\n?|\n/).map(line => line.trim())
+    .filter(line => line.length > 15 && !/^--- (?:หน้า \d+|นำเข้าจาก:)/.test(line));
+  const candidates = clean.flatMap(line => line.length > 380
+    ? (line.match(/.{1,380}/gu) || []) : [line]).slice(0, 4000);
+  if (!candidates.length) return extractPoints(text, 6).map(point => `• ${point}`).join('\n');
+  const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+  const words = value => [...segmenter.segment(value.toLocaleLowerCase())]
+    .filter(part => part.isWordLike && part.segment.length > 1)
+    .map(part => part.segment);
+  const frequency = new Map();
+  for (const line of candidates) for (const word of new Set(words(line)))
+    frequency.set(word, (frequency.get(word) || 0) + 1);
+  const ranked = candidates.map((line, index) => {
+    const tokens = words(line);
+    const score = tokens.reduce((sum, word) => sum + Math.log1p(frequency.get(word) || 0), 0) /
+      Math.sqrt(Math.max(tokens.length, 1));
+    return { line, index, score: score + (index < 5 ? .7 : 0) };
+  }).sort((a, b) => b.score - a.score);
+  const chosen = [];
+  for (const item of ranked) {
+    const key = item.line.replace(/\s+/g, '').toLocaleLowerCase();
+    if (chosen.some(other => other.line.replace(/\s+/g, '').toLocaleLowerCase().includes(key.slice(0, 45)))) continue;
+    chosen.push(item);
+    if (chosen.length === Math.min(8, Math.max(4, Math.ceil(candidates.length / 12)))) break;
+  }
+  return chosen.sort((a, b) => a.index - b.index).map(item => `• ${item.line}`).join('\n');
 }
 function localOutline(text) {
   const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
@@ -323,6 +356,13 @@ function localOutline(text) {
 }
 function showResult(title, content, mode) {
   state.result = content; state.resultMode = mode;
+  if (mode === 'summary') {
+    $('#summaryInput').value = content;
+    $('#summaryMethod').textContent = hasAi() ? 'สร้างด้วย AI · แก้ไขได้' : 'ประเด็นเบื้องต้นในเครื่อง · แก้ไขได้';
+    queueSave();
+    $('#summarySection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   $('#resultTitle').textContent = title; $('#resultBody').textContent = content;
   $('#resultCard').hidden = false;
   $('#useResult').textContent = mode === 'summary' ? 'ใช้เป็นสรุป' : 'สร้างโน้ตใหม่';
@@ -332,7 +372,7 @@ async function runAssistant(mode) {
   await flushSave();
   const note = activeNote(), source = note?.body.trim();
   if (mode === 'summary' && pendingForActiveNote()?.entries.length) { $('#importReview').scrollIntoView({ behavior: 'smooth', block: 'center' }); return toast('ตรวจและเพิ่มข้อมูลจากไฟล์ก่อนสรุป'); }
-  if (!source) return toast('เพิ่มเนื้อหาโน้ตก่อน');
+  if (!source) { $('#bodyInput').focus(); return toast('เพิ่มข้อความหรือไฟล์ก่อนสร้างสรุป'); }
   if (mode === 'tidy') return showResult('จัดบรรทัด PDF', tidyPdfText(note.body), mode);
   if (!hasAi()) {
     if (mode === 'idea') { $('#settingsModal').hidden = false; return toast('เชื่อมต่อโมเดล AI ก่อน'); }
@@ -341,7 +381,7 @@ async function runAssistant(mode) {
   }
   const prompts = {
     outline: 'จัดโครงหัวข้อและหัวข้อย่อยให้อ่านง่าย ใช้เฉพาะข้อมูลจากต้นฉบับ ตอบเป็นภาษาไทย',
-    summary: 'สรุปประเด็นสำคัญให้กระชับ อ่านง่าย ใช้เฉพาะข้อมูลจากต้นฉบับ ไม่แต่งข้อเท็จจริง ตอบเป็นภาษาไทย',
+    summary: 'เขียนสรุปภาษาไทยที่อ่านง่าย มีใจความสำคัญเป็นหัวข้อย่อยและรายละเอียดที่จำเป็น ใช้เฉพาะข้อมูลจากต้นฉบับ ไม่แต่งข้อเท็จจริง คงคำสำคัญ ตัวเลข ชื่อ และเลขหน้าเมื่อมี ตัดข้อความซ้ำ ห้ามตัดสระหรือวรรณยุกต์',
     idea: 'เสนอแนวคิด คำถามต่อยอด และวิธีจัดโน้ตนี้ให้อ่านง่าย แยกข้อเสนอจากข้อเท็จจริงในต้นฉบับ ตอบเป็นภาษาไทย'
   };
   const button = { outline: $('#outlineButton'), summary: $('#summaryButton'), idea: $('#ideaButton') }[mode];
@@ -399,11 +439,13 @@ async function exportNote(type) {
   await flushSave(); const note = activeNote(); if (!note) return;
   $('#exportModal').hidden = true;
   const title = note.title || 'โน้ตไม่มีชื่อ';
-  if (type === 'summary') { download(new Blob([`${title}\n\n${note.summary || 'ยังไม่มีสรุป'}\n`], { type: 'text/plain;charset=utf-8' }), fileName(`${title}-สรุป`, 'txt')); return; }
-  if (type === 'print') {
+  if (['summary', 'summary-md', 'print-summary'].includes(type) && !note.summary.trim()) return toast('สร้างหรือเขียนสรุปก่อนส่งออก');
+  if (type === 'summary') { download(new Blob([`${title}\n\n${note.summary}\n`], { type: 'text/plain;charset=utf-8' }), fileName(`${title}-สรุป`, 'txt')); return; }
+  if (type === 'summary-md') { download(new Blob([`# ${title}\n\n## สรุป\n\n${note.summary.trim()}\n`], { type: 'text/markdown;charset=utf-8' }), fileName(`${title}-สรุป`, 'md')); return; }
+  if (type === 'print' || type === 'print-summary') {
     const assets = (await Promise.all(note.imageIds.map(getImage))).filter(Boolean);
-    const imageHtml = (await Promise.all(assets.map(async asset => `<figure><img src="${await blobToDataUrl(asset.blob)}" alt="${escapeHtml(asset.name)}"><figcaption>${escapeHtml(asset.name)}</figcaption></figure>`))).join('');
-    $('#printContent').innerHTML = `<h1>${escapeHtml(title)}</h1>${note.summary ? `<aside><strong>สรุป</strong><pre>${escapeHtml(note.summary)}</pre></aside>` : ''}<pre>${escapeHtml(note.body)}</pre>${imageHtml}`;
+    const imageHtml = type === 'print' ? (await Promise.all(assets.map(async asset => `<figure><img src="${await blobToDataUrl(asset.blob)}" alt="${escapeHtml(asset.name)}"><figcaption>${escapeHtml(asset.name)}</figcaption></figure>`))).join('') : '';
+    $('#printContent').innerHTML = `<h1>${escapeHtml(title)}</h1>${note.summary ? `<aside><strong>สรุป</strong><pre>${escapeHtml(note.summary)}</pre></aside>` : ''}${type === 'print' ? `<h2>ต้นฉบับ</h2><pre>${escapeHtml(note.body)}</pre>${imageHtml}` : ''}`;
     await Promise.all([...$('#printContent').querySelectorAll('img')].map(image => image.decode().catch(() => {})));
     window.print(); return;
   }
@@ -467,6 +509,18 @@ function bindEvents() {
   for (const input of [$('#fileInput'), $('#dropFileInput')]) input.addEventListener('change', event => { stageFiles(event.target.files).catch(error => { console.error(error); toast('นำเข้าไฟล์ไม่สำเร็จ'); }); event.target.value = ''; });
   $('#addNewImport').addEventListener('click', () => applyImported(true).catch(error => { console.error(error); toast('เพิ่มข้อมูลไม่สำเร็จ'); }));
   $('#addAllImport').addEventListener('click', () => applyImported(false).catch(error => { console.error(error); toast('เพิ่มข้อมูลไม่สำเร็จ'); }));
+  $('#textEncoding').addEventListener('change', async event => {
+    const pending = pendingForActiveNote(); if (!pending) return;
+    try {
+      const { decodeTextBytes } = await import('./text-reader.mjs');
+      for (const entry of pending.entries.filter(item => item.kind === 'text')) {
+        const decoded = decodeTextBytes(entry.bytes, event.target.value);
+        entry.text = decoded.text; entry.encoding = decoded.encoding;
+      }
+      pending.status = 'เปลี่ยนการอ่าน TXT แล้ว ตรวจสระและวรรณยุกต์ก่อนเพิ่ม';
+      renderImportReview();
+    } catch { toast('การเข้ารหัสนี้อ่านไฟล์ไม่ได้ ลองเลือกอัตโนมัติหรือ Thai Windows-874'); }
+  });
   $('#dismissImport').addEventListener('click', () => { state.pendingImports.delete(state.activeId); renderImportReview(); });
   $('#imageGrid').addEventListener('click', event => { const button = event.target.closest('[data-remove-image]'); if (button) removeImage(button.dataset.removeImage); });
   for (const zone of [$('#dropzone'), $('#fileDrop')]) {
@@ -477,6 +531,9 @@ function bindEvents() {
   $('#tidyButton').addEventListener('click', () => runAssistant('tidy'));
   $('#outlineButton').addEventListener('click', () => runAssistant('outline'));
   $('#summaryButton').addEventListener('click', () => runAssistant('summary'));
+  $('#copySummary').addEventListener('click', async () => { const summary = $('#summaryInput').value.trim(); if (!summary) return toast('ยังไม่มีสรุป'); try { await navigator.clipboard.writeText(summary); toast('คัดลอกสรุปแล้ว'); } catch { toast('คัดลอกไม่สำเร็จ'); } });
+  $('#downloadSummary').addEventListener('click', () => exportNote('summary-md'));
+  $('#printSummary').addEventListener('click', () => exportNote('print-summary'));
   $('#ideaButton').addEventListener('click', () => runAssistant('idea'));
   $('#closeResult').addEventListener('click', () => { $('#resultCard').hidden = true; });
   $('#copyResult').addEventListener('click', async () => { try { await navigator.clipboard.writeText(state.result); toast('คัดลอกแล้ว'); } catch { toast('คัดลอกไม่สำเร็จ'); } });

@@ -8,7 +8,7 @@ if (!destination.startsWith(`${root}${sep}`)) throw new Error('Invalid output pa
 rmSync(destination, { recursive: true, force: true });
 mkdirSync(resolve(destination, 'vendor/pdfjs'), { recursive: true });
 const files = [
-  'index.html', 'styles.css', 'import.css', 'app.js', 'pdf-reader.mjs',
+  'index.html', 'styles.css', 'app.js', 'pdf-reader.mjs', 'text-reader.mjs',
   'vendor/pdfjs/pdf.min.mjs', 'vendor/pdfjs/pdf.worker.min.mjs'
 ];
 for (const file of files) cpSync(resolve(root, file), resolve(destination, file));

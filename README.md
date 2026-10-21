@@ -1,20 +1,21 @@
 # Note-for-life
 
-**A private-by-default study notebook for text, PDFs, and images.** Paste text without losing the original, compare an imported PDF with an existing note, then decide what to add before creating a summary.
+**A private-by-default study notebook for text, PDFs, and images.** Import a file, check every extracted character, create an editable summary, and export it from one screen.
 
 [Open the app](https://zumo1547.github.io/Note-for-life/) · [ภาษาไทย](README.th.md) · [Report an issue](https://github.com/zumo1547/Note-for-life/issues)
 
 ## Why use it?
 
 - **Keep your source material:** Pasted PDF text stays in the editor as copied. Formatting and AI results appear separately until you choose to use them.
-- **Compare before merging:** Import `.txt`, `.md`, or a text-based `.pdf`. See new and repeated lines, inspect the extracted text, and add either the new material or the full file.
+- **Check before merging:** Import `.txt`, `.md`, or a text-based `.pdf`. See new and repeated lines, inspect the full extracted text, then add the full file. Comparison counts are informational and never remove characters.
+- **Read Thai text reliably:** UTF-8, UTF-16, and Thai Windows-874/TIS-620 text files are supported. Change the encoding in the review panel if the preview looks wrong.
 - **Study with structure:** Draft an outline, tidy PDF line breaks, and create a concise summary. Add a compatible AI service for deeper analysis and idea prompts.
 - **Keep useful images:** Paste screenshots from the clipboard or attach image files.
-- **Take notes with you:** Export HTML, Markdown with images, a text summary, or a JSON backup. Import a JSON backup as a new note.
+- **Take notes with you:** Export an editable Markdown summary, a text summary, a print-ready PDF, HTML, Markdown with images, or a JSON backup. Import a JSON backup as a new note.
 
 ## Start using it
 
-Open the [hosted app](https://zumo1547.github.io/Note-for-life/) in a current browser. Create a note, paste text into the editor, or use **Add file** to import study material. For a PDF, review the comparison panel and add its content before clicking **Summarize**.
+Open the [hosted app](https://zumo1547.github.io/Note-for-life/) in a current browser. Follow the three steps on screen: **Add files → Review the source → Create a summary**. The summary appears in the main workspace, stays editable, and has its own download buttons.
 
 Notes and images are saved automatically in **IndexedDB in your browser**. They remain available when you return on the same browser and site address. They are not uploaded to GitHub and do not sync across devices. Browser storage can be cleared by the user, the browser, or private browsing mode. Export JSON backups regularly, especially before changing browsers or devices.
 
@@ -26,7 +27,7 @@ In **AI settings**, enter an HTTPS Chat Completions-compatible endpoint, model n
 
 Use Note-for-life to collect lecture notes, excerpts from accessible PDFs, diagrams, and screenshots in one place. The comparison step is useful when adding a revised handout or combining readings: it helps identify repeated text before you update your note. The original material remains visible so you can check summaries against the source. Please respect copyright and your institution's rules when importing or sharing documents.
 
-Text in scanned-image PDFs cannot be extracted without OCR. The app reports this instead of silently creating an empty note. The automatic duplicate check compares normalized text, so review the preview when wording differs.
+Text in scanned-image PDFs cannot be extracted without OCR. Some PDFs with damaged font mappings may also yield incorrect characters; check the full preview before adding. The automatic duplicate check compares normalized text for display only.
 
 ## Run and edit locally
 
@@ -43,9 +44,10 @@ Code map:
 | File | Purpose |
 | --- | --- |
 | `index.html` | App layout and controls |
-| `styles.css`, `import.css` | General and file-import styles |
+| `styles.css` | App styles and responsive layout |
 | `app.js` | Notes, IndexedDB, comparison, AI request, exports |
 | `pdf-reader.mjs` | Extract text from PDF pages |
+| `text-reader.mjs` | Decode UTF-8, UTF-16, and Thai legacy text |
 | `vendor/pdfjs/` | Bundled PDF.js files and their Apache 2.0 license |
 | `scripts/build-site.mjs` | Copy only public files into the Pages artifact |
 
