@@ -4,8 +4,6 @@
 
 [Open the app](https://zumo1547.github.io/Note-for-life/) · [ภาษาไทย](README.th.md) · [Report an issue](https://github.com/zumo1547/Note-for-life/issues)
 
-> The GitHub Pages link works after Pages is enabled for this repository and the deployment workflow finishes.
-
 ## Why use it?
 
 - **Keep your source material:** Pasted PDF text stays in the editor as copied. Formatting and AI results appear separately until you choose to use them.
