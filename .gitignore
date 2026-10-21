@@ -2,6 +2,7 @@
 PDF/
 *.pdf
 *.txt
+!fonts/OFL.txt
 *.json
 *.zip
 backups/

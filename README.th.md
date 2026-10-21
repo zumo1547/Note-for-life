@@ -28,7 +28,8 @@
 ## ไฟล์
 
 - `index.html` — หน้าจอแอป
-- `styles.css` — รูปแบบหน้าจอ
+- `styles.css` และ `typography.css` — รูปแบบหน้าจอและตัวอักษร
+- `fonts/` — ฟอนต์ IBM Plex Sans Thai พร้อมสัญญาอนุญาต OFL
 - `app.js` — การทำงานและที่เก็บข้อมูล
 - `pdf-reader.mjs` และ `vendor/pdfjs/` — อ่านข้อความ PDF ในเครื่อง
 - `text-reader.mjs` — อ่านไฟล์ TXT ภาษาไทยหลายรูปแบบ

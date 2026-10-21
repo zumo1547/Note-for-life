@@ -1,0 +1,69 @@
+/* IBM Plex Sans Thai is bundled locally; see fonts/OFL.txt. */
+@font-face {
+  font-family: "Plex Thai";
+  src: url("./fonts/IBMPlexSansThai-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plex Thai";
+  src: url("./fonts/IBMPlexSansThai-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plex Thai";
+  src: url("./fonts/IBMPlexSansThai-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+}
+
+:root {
+  font-family: "Plex Thai", "Leelawadee UI", sans-serif;
+  line-height: 1.6;
+}
+
+button, input, textarea, select { font-family: inherit; }
+h1, h2, h3, .title-input, .brand strong { letter-spacing: 0; }
+
+.brand strong { font-size: 19px; }
+.brand small, .sidebar-bottom { font-size: 12px; }
+.note-item strong { font-size: 14px; }
+.note-item .excerpt, .note-item .date { font-size: 12px; }
+.section-label, .search-wrap input { font-size: 13px; }
+.breadcrumb strong { font-size: 15px; }
+.save-status, .quiet-button, .outline-button, .primary-button { font-size: 13px; }
+
+.hero h1 { font-size: clamp(28px, 3vw, 37px); line-height: 1.35; }
+.hero p { font-size: 14px; }
+.hero-steps span { font-size: 12px; }
+.note-meta { font-size: 12px; }
+.title-input { font-size: 25px; }
+.section-head h2 { font-size: 18px; }
+.section-head p, .file-drop small { font-size: 13px; }
+.file-drop strong { font-size: 15px; }
+.count, .editor-foot { font-size: 12px; }
+.toolbar button, .toolbar-file, .assist-buttons button { font-size: 12px; }
+.source-section textarea, .summary-card textarea { font-size: 16px; line-height: 1.85; }
+.summary-head { font-size: 14px; }
+.summary-head span { font-size: 12px; }
+.import-review textarea { font-size: 14px; }
+.import-review p, .import-file, .encoding-wrap { font-size: 13px; }
+.import-stat small { font-size: 12px; }
+.extra-tools summary { font-size: 14px; }
+.modal h2 { font-size: 21px; }
+.modal>p, .modal-options strong { font-size: 13px; }
+.modal-options small { font-size: 12px; }
+.print-content { font-family: "Plex Thai", "Leelawadee UI", sans-serif; }
+
+@media (max-width: 500px) {
+  .hero h1 { font-size: 27px; }
+  .hero p, .section-head p { font-size: 12px; }
+  .title-input { font-size: 21px; }
+  .source-section textarea, .summary-card textarea { font-size: 16px; }
+}

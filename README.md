@@ -44,10 +44,11 @@ Code map:
 | File | Purpose |
 | --- | --- |
 | `index.html` | App layout and controls |
-| `styles.css` | App styles and responsive layout |
+| `styles.css`, `typography.css` | App layout and Thai typography |
 | `app.js` | Notes, IndexedDB, comparison, AI request, exports |
 | `pdf-reader.mjs` | Extract text from PDF pages |
 | `text-reader.mjs` | Decode UTF-8, UTF-16, and Thai legacy text |
+| `fonts/` | Bundled IBM Plex Sans Thai and its Open Font License |
 | `vendor/pdfjs/` | Bundled PDF.js files and their Apache 2.0 license |
 | `scripts/build-site.mjs` | Copy only public files into the Pages artifact |
 
