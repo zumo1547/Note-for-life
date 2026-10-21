@@ -1,33 +1,33 @@
 # Note-for-life
 
-**A private-by-default study notebook for text, PDFs, and images.** Import a file, check every extracted character, create an editable summary, and export it from one screen.
+**A private-by-default study notebook for text, PDFs, and images.** Drop a file and get an editable summary automatically. No account or API key is needed.
 
 [Open the app](https://zumo1547.github.io/Note-for-life/) · [ภาษาไทย](README.th.md) · [Report an issue](https://github.com/zumo1547/Note-for-life/issues)
 
 ## Why use it?
 
-- **Keep your source material:** Pasted PDF text stays in the editor as copied. Formatting and AI results appear separately until you choose to use them.
-- **Check before merging:** Import `.txt`, `.md`, or a text-based `.pdf`. See new and repeated lines, inspect the full extracted text, then add the full file. Comparison counts are informational and never remove characters.
-- **Read Thai text reliably:** UTF-8, UTF-16, and Thai Windows-874/TIS-620 text files are supported. Change the encoding in the review panel if the preview looks wrong.
-- **Study with structure:** Draft an outline, tidy PDF line breaks, and create a concise summary. Add a compatible AI service for deeper analysis and idea prompts.
+- **One action to summarize:** Import `.txt`, `.md`, or a text-based `.pdf`. The full text is added to the note and an editable summary appears automatically.
+- **Keep your source material:** The extracted text stays in the editor. You can correct it and press **Summarize again** at any time.
+- **Read Thai text reliably:** UTF-8, UTF-16, and Thai Windows-874/TIS-620 text files are supported. A review panel appears if extraction contains replacement characters.
+- **Optional AI on your device:** On browsers with WebGPU, one button downloads a small multilingual model to improve the summary locally. It does not require an API key.
 - **Keep useful images:** Paste screenshots from the clipboard or attach image files.
 - **Take notes with you:** Export an editable Markdown summary, a text summary, a print-ready PDF, HTML, Markdown with images, or a JSON backup. Import a JSON backup as a new note.
 
 ## Start using it
 
-Open the [hosted app](https://zumo1547.github.io/Note-for-life/) in a current browser. Follow the three steps on screen: **Add files → Review the source → Create a summary**. The summary appears in the main workspace, stays editable, and has its own download buttons.
+Open the [hosted app](https://zumo1547.github.io/Note-for-life/) in a current browser. Drag in a PDF or text file. The app extracts its text and creates a summary automatically. Correct the source or summary if needed, then download it.
 
 Notes and images are saved automatically in **IndexedDB in your browser**. They remain available when you return on the same browser and site address. They are not uploaded to GitHub and do not sync across devices. Browser storage can be cleared by the user, the browser, or private browsing mode. Export JSON backups regularly, especially before changing browsers or devices.
 
-### AI is optional
+### How local AI works
 
-In **AI settings**, enter an HTTPS Chat Completions-compatible endpoint, model name, and API key. The key is kept only in the current page's memory; it is not committed, saved in IndexedDB, or included in exports. When you run AI analysis, the relevant note or imported file text is sent to the endpoint you chose. Use a provider you trust, and check its pricing, privacy policy, and browser CORS support. Without AI, local extraction and basic point suggestions still work.
+The instant summary is an **extractive summary**: it selects important passages from the original in the browser. It works without a model download, including on mobile. The **Improve with AI on this device** button loads [WebLLM](https://github.com/mlc-ai/web-llm) and a [Qwen2.5 0.5B model](https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC) on compatible WebGPU devices. The first use downloads model files from Hugging Face and may need substantial storage and time. Text is processed on the device; the model receives selected passages from the note, not the entire long PDF. After a successful run, later imports can improve automatically. If the model cannot run, the instant summary remains available.
 
 ## For educators and students
 
-Use Note-for-life to collect lecture notes, excerpts from accessible PDFs, diagrams, and screenshots in one place. The comparison step is useful when adding a revised handout or combining readings: it helps identify repeated text before you update your note. The original material remains visible so you can check summaries against the source. Please respect copyright and your institution's rules when importing or sharing documents.
+Use Note-for-life to collect lecture notes, excerpts from accessible PDFs, diagrams, and screenshots in one place. The original material remains visible so you can check summaries against the source. Please respect copyright and your institution's rules when importing or sharing documents.
 
-Text in scanned-image PDFs cannot be extracted without OCR. Some PDFs with damaged font mappings may also yield incorrect characters; check the full preview before adding. The automatic duplicate check compares normalized text for display only.
+Text in scanned-image PDFs cannot be extracted without OCR. Some PDFs with damaged font mappings may also yield incorrect characters; check the extracted text before relying on a summary.
 
 ## Run and edit locally
 
@@ -45,11 +45,13 @@ Code map:
 | --- | --- |
 | `index.html` | App layout and controls |
 | `styles.css`, `typography.css` | App layout and Thai typography |
-| `app.js` | Notes, IndexedDB, comparison, AI request, exports |
+| `app.js` | Notes, IndexedDB, automatic summaries, exports |
+| `local-ai.mjs` | Optional browser-local AI summary |
 | `pdf-reader.mjs` | Extract text from PDF pages |
 | `text-reader.mjs` | Decode UTF-8, UTF-16, and Thai legacy text |
 | `fonts/` | Bundled IBM Plex Sans Thai and its Open Font License |
 | `vendor/pdfjs/` | Bundled PDF.js files and their Apache 2.0 license |
+| `vendor/webllm.mjs` | Bundled WebLLM runtime, loaded only when local AI is used |
 | `scripts/build-site.mjs` | Copy only public files into the Pages artifact |
 
 Run `node verify.mjs` to check the UI element references and comparison logic. Run `node --check app.js` and `node --check pdf-reader.mjs` for syntax checks.
@@ -69,4 +71,4 @@ Educational improvements, accessibility fixes, translations, and bug reports are
 
 ## License
 
-The original project code is available under the [MIT License](LICENSE). The bundled PDF.js files retain their own [Apache 2.0 license](vendor/pdfjs/LICENSE).
+The original project code is available under the [MIT License](LICENSE). Bundled PDF.js and WebLLM retain their [Apache 2.0](vendor/pdfjs/LICENSE) and [Apache 2.0](vendor/webllm-LICENSE) licenses. Bundled loglevel retains its [MIT license](vendor/loglevel-LICENSE); IBM Plex Sans Thai retains its [Open Font License](fonts/OFL.txt). Model files are downloaded separately from Hugging Face when local AI is enabled.

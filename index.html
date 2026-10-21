@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self' data:; connect-src 'self' https: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' blob: data:; font-src 'self' data:; connect-src 'self' https: data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="theme-color" content="#f4f6f9">
   <title>Note-for-life — อ่าน จด และสรุป</title>
   <link rel="stylesheet" href="styles.css">
@@ -17,39 +17,50 @@
     <label class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="ค้นหาโน้ต" aria-label="ค้นหาโน้ต"></label>
     <div class="section-label">โน้ตของฉัน <span id="noteCount">0</span></div>
     <div id="noteList" class="note-list" role="list"></div>
+    <button id="deleteButton" class="sidebar-delete">ลบโน้ตปัจจุบัน</button>
     <div class="sidebar-bottom"><span class="status-dot"></span> บันทึกในเบราว์เซอร์นี้</div>
   </aside>
   <main class="workspace">
     <header class="topbar">
       <div class="breadcrumb"><button class="icon-button menu-button" id="menuButton" aria-label="เปิดรายการโน้ต">☰</button><strong id="breadcrumbTitle">โน้ตใหม่</strong><span class="save-status" id="saveStatus" role="status">พร้อมใช้งาน</span></div>
-      <div class="top-actions"><button class="quiet-button" id="settingsButton">⚙ <span>ตั้งค่า AI</span></button><button class="quiet-button" id="deleteButton">⌫ <span>ลบ</span></button><button class="outline-button" id="exportButton">↧ ส่งออก</button></div>
+      <div class="top-actions"><button class="outline-button" id="exportButton">↧ ส่งออก</button></div>
     </header>
     <div class="editor-scroll"><div class="editor-layout"><article class="editor-column">
-      <div class="hero"><div><span class="eyebrow">NOTE WORKSPACE</span><h1>จากไฟล์กระจัดกระจาย<br><em>สู่สรุปที่อ่านรู้เรื่อง</em></h1><p>เพิ่ม TXT หรือ PDF ตรวจข้อความต้นฉบับ แล้วกดสร้างสรุปในหน้าเดียว</p></div><div class="hero-steps"><span>01 เพิ่มข้อมูล</span><span>02 ตรวจต้นฉบับ</span><span>03 สรุปและส่งออก</span></div></div>
+      <div class="hero"><div><span class="eyebrow">NOTE WORKSPACE</span><h1>วาง PDF แล้ว<br><em>ได้สรุปพร้อมอ่าน</em></h1><p>เลือกไฟล์ครั้งเดียว เว็บจะอ่านและสรุปให้อัตโนมัติ ไม่ต้องมี API key</p></div><div class="hero-steps"><span>01 วางไฟล์</span><span>02 อ่านสรุป</span><span>03 ดาวน์โหลด</span></div></div>
       <div class="note-heading"><div class="note-meta">โน้ตปัจจุบัน · <span id="dateLabel"></span></div><input id="titleInput" class="title-input" type="text" placeholder="ตั้งชื่อโน้ต เช่น บทที่ 1 ระบบสารสนเทศ" aria-label="ชื่อโน้ต" maxlength="160"></div>
       <div id="localFileNotice" class="local-file-notice" hidden>การอ่าน PDF และการบันทึกย้อนหลังทำงานได้ดีที่สุดบนเว็บออนไลน์ หรือเปิดด้วย <strong>start.cmd</strong> ในเครื่อง</div>
       <section class="surface import-section" aria-labelledby="importHeading">
-        <div class="section-head"><div><span class="step">1</span><div><h2 id="importHeading">เพิ่มไฟล์และรูป</h2><p>ลาก TXT, Markdown, PDF หรือรูปมาวางได้เลย</p></div></div></div>
+        <div class="section-head"><div><span class="step">1</span><div><h2 id="importHeading">วาง PDF หรือโน้ต</h2><p>เว็บจะเพิ่มข้อความและทำสรุปให้ทันที</p></div></div></div>
         <label class="file-drop" id="fileDrop"><span class="file-drop-icon">↥</span><strong>วางไฟล์ที่นี่ หรือคลิกเพื่อเลือก</strong><small>TXT · MD · PDF · รูปภาพ | สูงสุด 25 MB ต่อไฟล์</small><input id="dropFileInput" type="file" accept=".txt,.md,.pdf,image/*,text/plain,text/markdown,application/pdf" multiple hidden></label>
+        <p id="uploadStatus" class="upload-status" role="status" aria-live="polite">เลือกไฟล์แล้วรอสักครู่ สรุปจะปรากฏด้านล่าง</p>
         <div id="importReview" class="import-review" hidden>
           <div class="import-review-head"><div><span class="eyebrow">ตรวจต้นฉบับก่อนเพิ่ม</span><h3 id="importReviewTitle">ไฟล์ที่อ่านได้</h3></div><button id="dismissImport" class="icon-button small" aria-label="ปิดการนำเข้า">×</button></div>
           <p id="importStatus" role="status"></p><div id="importFileList" class="import-file-list"></div><div id="importComparison" class="import-comparison"></div>
           <label class="encoding-wrap">การอ่านไฟล์ TXT <select id="textEncoding" aria-label="เลือกการเข้ารหัสไฟล์ข้อความ"><option value="auto">อัตโนมัติ</option><option value="utf-8">UTF-8</option><option value="windows-874">Thai Windows-874 / TIS-620</option><option value="utf-16le">UTF-16 LE</option><option value="utf-16be">UTF-16 BE</option></select></label>
           <p class="review-hint">ตรวจอักษรไทยในช่องด้านล่าง ข้อความที่เพิ่มจะตรงกับที่เห็นครบทุกตัว</p>
           <textarea id="importPreview" readonly spellcheck="false" aria-label="ข้อความจากไฟล์ทั้งหมด"></textarea>
-          <div id="importAi" class="import-ai" hidden><strong id="importAiHeading">ผลวิเคราะห์</strong><pre id="importAiText"></pre></div>
-          <div class="import-actions"><button class="primary-button" id="addAllImport">＋ เพิ่มข้อความทั้งหมดลงโน้ต</button><button class="quiet-button" id="addNewImport" hidden>เพิ่มเฉพาะข้อมูลใหม่</button></div>
+          <div class="import-actions"><button class="primary-button" id="addAllImport">＋ เพิ่มข้อความทั้งหมดลงโน้ต</button></div>
         </div>
       </section>
-      <section class="surface source-section" aria-labelledby="sourceHeading"><div class="section-head"><div><span class="step">2</span><div><h2 id="sourceHeading">ตรวจและแก้ต้นฉบับ</h2><p>ข้อความทั้งหมดอยู่ตรงนี้ แก้ได้ทันทีและบันทึกอัตโนมัติ</p></div></div><span id="wordCount" class="count">0 ตัวอักษร</span></div><div class="toolbar"><button data-insert="heading">H หัวข้อ</button><button data-insert="bullet">☷ รายการ</button><button data-insert="quote">❝ อ้างอิง</button><button id="pasteImageButton">▧ วางรูป</button><label class="toolbar-file">＋ รูป<input id="imageInput" type="file" accept="image/*" multiple hidden></label><label class="toolbar-file">↥ ไฟล์<input id="fileInput" type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" multiple hidden></label></div><textarea id="bodyInput" spellcheck="true" placeholder="วางข้อความที่นี่ หรือเพิ่มไฟล์ด้านบน..." aria-label="เนื้อหาโน้ต"></textarea><div class="editor-foot">Ctrl+V เพื่อวางข้อความหรือรูป · Ctrl+S เพื่อบันทึก</div></section>
-      <section class="surface summary-section" id="summarySection" aria-labelledby="summaryHeading"><div class="section-head"><div><span class="step">3</span><div><h2 id="summaryHeading">สรุปพร้อมอ่าน</h2><p>สร้างแล้วแก้ไขได้ก่อนดาวน์โหลด</p></div></div><button class="primary-button" id="summaryButton">✦ สร้างสรุป</button></div><div class="summary-card"><div class="summary-head"><strong>ผลสรุปของโน้ตนี้</strong><span id="summaryMethod">พร้อมสร้าง</span></div><p id="summaryDisplay" hidden></p><textarea id="summaryInput" aria-label="แก้ไขสรุป" placeholder="กด ‘สร้างสรุป’ หรือเขียนสรุปเองได้ที่นี่"></textarea><button id="editSummary" hidden>แก้ไข</button><div class="summary-actions"><button class="outline-button" id="copySummary">คัดลอกสรุป</button><button class="outline-button" id="downloadSummary">ดาวน์โหลดสรุป .md</button><button class="quiet-button" id="printSummary">พิมพ์ / บันทึก PDF</button></div></div><div class="result-card" id="resultCard" hidden><div class="result-head"><strong id="resultTitle">ผลลัพธ์</strong><button class="icon-button small" id="closeResult" aria-label="ปิดผลลัพธ์">×</button></div><div id="resultBody" class="result-body"></div><div class="result-actions"><button class="outline-button" id="copyResult">คัดลอก</button><button class="primary-button" id="useResult">ใช้ผลลัพธ์</button></div></div></section>
-      <details class="surface extra-tools"><summary>เครื่องมือเพิ่ม: จัดบรรทัด ร่างหัวข้อ และ AI</summary><div class="assist-buttons"><button id="tidyButton">จัดบรรทัด PDF</button><button id="outlineButton">ร่างหัวข้อ</button><button id="ideaButton">ต่อยอดไอเดียด้วย AI</button></div><p>หากไม่ได้เชื่อม AI แอปจะสร้างประเด็นเบื้องต้นในเครื่อง ต้นฉบับยังอยู่ครบ</p></details>
+      <section class="surface summary-section" id="summarySection" aria-labelledby="summaryHeading">
+        <div class="section-head"><div><span class="step">2</span><div><h2 id="summaryHeading">สรุปของคุณ</h2><p>แก้ไขได้และดาวน์โหลดได้ทันที</p></div></div><button class="primary-button" id="summaryButton">✦ สรุปใหม่</button></div>
+        <div class="summary-card">
+          <div class="summary-head"><strong>ใจความสำคัญ</strong><span id="summaryMethod">รอไฟล์หรือข้อความ</span></div>
+          <textarea id="summaryInput" aria-label="แก้ไขสรุป" placeholder="วาง PDF ด้านบน แล้วสรุปจะปรากฏที่นี่"></textarea>
+          <div class="summary-actions"><button class="outline-button" id="copySummary">คัดลอก</button><button class="primary-button" id="downloadSummary">ดาวน์โหลดสรุป</button></div>
+        </div>
+        <div class="local-ai-box"><button class="outline-button" id="localAiButton">✨ ปรับสรุปด้วย AI ในเครื่อง</button><span id="localAiStatus" role="status">ไม่ต้องมี API key · ครั้งแรกต้องดาวน์โหลดโมเดล · ใช้ได้บนเครื่องที่รองรับ WebGPU</span></div>
+      </section>
+      <section class="surface source-section" aria-labelledby="sourceHeading">
+        <div class="section-head"><div><span class="step">▤</span><div><h2 id="sourceHeading">ข้อความต้นฉบับ</h2><p>แก้ไขข้อความได้ แล้วกดสรุปใหม่</p></div></div><span id="wordCount" class="count">0 ตัวอักษร</span></div>
+        <textarea id="bodyInput" spellcheck="true" placeholder="พิมพ์หรือวางข้อความที่นี่ หรือเพิ่ม PDF ด้านบน..." aria-label="เนื้อหาโน้ต"></textarea>
+        <div class="editor-foot">ต้นฉบับเก็บไว้ครบ · บันทึกอัตโนมัติ</div>
+      </section>
       <section class="surface images-section"><div class="section-head"><div><span class="step image-step">▧</span><div><h2>รูปประกอบ</h2><p>รูปจากคลิปบอร์ดหรือไฟล์ของคุณ</p></div></div><span id="imageCount" class="count">0 รูป</span></div><div class="dropzone" id="dropzone">ลากรูปมาวาง หรือคลิกช่องเนื้อหาแล้วกด Ctrl+V</div><div class="image-grid" id="imageGrid"></div></section>
     </article></div></div>
   </main>
 </div>
 <div class="modal-backdrop" id="exportModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle"><div class="modal-head"><h2 id="exportTitle">ส่งออกโน้ต</h2><button class="icon-button modal-close" data-close="exportModal" aria-label="ปิด">×</button></div><p>เลือกไฟล์ที่ต้องการ</p><div class="modal-options"><button data-export="summary-md"><strong>สรุป Markdown (.md)</strong><small>อ่านง่าย แก้ไขต่อได้</small></button><button data-export="summary"><strong>สรุปข้อความ (.txt)</strong><small>ใช้ได้กับทุกโปรแกรม</small></button><button data-export="print-summary"><strong>สรุป PDF</strong><small>เปิดหน้าพิมพ์แล้วเลือกบันทึกเป็น PDF</small></button><button data-export="markdown"><strong>โน้ตและรูป (.zip)</strong><small>ไฟล์ Markdown พร้อมรูปประกอบ</small></button><button data-export="html"><strong>โน้ตหน้าเว็บ (.html)</strong><small>เปิดอ่านออฟไลน์ได้</small></button><button data-export="backup"><strong>สำรองข้อมูล (.json)</strong><small>ใช้กู้คืนโน้ตและรูป</small></button><label class="import-option"><strong>นำเข้าไฟล์สำรอง (.json)</strong><small>กู้คืนเป็นโน้ตใหม่</small><input id="backupInput" type="file" accept=".json,application/json" hidden></label><button data-export="print"><strong>พิมพ์โน้ต / PDF</strong><small>ต้นฉบับและสรุปในหน้าเดียว</small></button></div></section></div>
-<div class="modal-backdrop" id="settingsModal" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="modal-head"><h2 id="settingsTitle">เชื่อมต่อ AI</h2><button class="icon-button modal-close" data-close="settingsModal" aria-label="ปิด">×</button></div><p>ถ้าเชื่อมบริการ Chat Completions ข้อความโน้ตจะถูกส่งไปยัง endpoint ที่คุณระบุ API key เก็บในหน่วยความจำหน้านี้เท่านั้น</p><label>API endpoint<input id="aiEndpoint" type="url" placeholder="https://.../chat/completions" autocomplete="off"></label><label>ชื่อโมเดล<input id="aiModel" type="text" placeholder="ชื่อโมเดล" autocomplete="off"></label><label>API key<input id="aiKey" type="password" placeholder="API key" autocomplete="off"></label><div class="modal-footer"><span id="aiStatus">ยังไม่ได้เชื่อมต่อ</span><button class="primary-button" id="saveAiSettings">ใช้การตั้งค่านี้</button></div></section></div>
 <div id="printContent" class="print-content" aria-hidden="true"></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="app.js" defer></script>
 </body></html>

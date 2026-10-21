@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const root = __dirname;
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.md': 'text/plain; charset=utf-8', '.pdf': 'application/pdf', '.ttf': 'font/ttf', '.txt': 'text/plain; charset=utf-8' };
-const publicFiles = new Set(['index.html', 'styles.css', 'typography.css', 'app.js', 'pdf-reader.mjs', 'text-reader.mjs', 'fonts/IBMPlexSansThai-Regular.ttf', 'fonts/IBMPlexSansThai-Medium.ttf', 'fonts/IBMPlexSansThai-Bold.ttf', 'fonts/OFL.txt', 'vendor/pdfjs/pdf.min.mjs', 'vendor/pdfjs/pdf.worker.min.mjs']);
+const publicFiles = new Set(['index.html', 'styles.css', 'typography.css', 'app.js', 'pdf-reader.mjs', 'text-reader.mjs', 'local-ai.mjs', 'fonts/IBMPlexSansThai-Regular.ttf', 'fonts/IBMPlexSansThai-Medium.ttf', 'fonts/IBMPlexSansThai-Bold.ttf', 'fonts/OFL.txt', 'vendor/pdfjs/pdf.min.mjs', 'vendor/pdfjs/pdf.worker.min.mjs', 'vendor/webllm.mjs', 'vendor/webllm-LICENSE', 'vendor/loglevel-LICENSE']);
 const server = http.createServer((request, response) => {
   if (!['GET', 'HEAD'].includes(request.method)) { response.writeHead(405).end(); return; }
   let pathname;

@@ -26,7 +26,8 @@ const utf8 = new TextEncoder().encode(thai);
 assert.equal(decodeTextBytes(utf8).text, thai);
 assert.equal(decodeTextBytes(new Uint8Array([0xa1, 0xd2]), 'windows-874').text, 'กา');
 assert.equal(decodeTextBytes(new Uint8Array([0xa1, 0xd2])).text, 'กา');
-assert.ok(html.indexOf('id="addAllImport"') < html.indexOf('id="addNewImport"'));
-assert.ok(html.indexOf('id="summaryButton"') < html.indexOf('id="resultCard"'));
+assert.ok(ids.has('addAllImport'));
+assert.ok(!ids.has('addNewImport') && !ids.has('aiEndpoint'));
+assert.ok(ids.has('localAiButton') && ids.has('uploadStatus'));
 
-console.log(`ตรวจผ่าน: อ้างถึง ${usedIds.size} ปุ่ม/ช่องครบ ข้อความไทย UTF-8/Windows-874 ครบ และสรุปอยู่ในหน้าหลัก`);
+console.log(`ตรวจผ่าน: อ้างถึง ${usedIds.size} ปุ่ม/ช่องครบ ข้อความไทย UTF-8/Windows-874 ครบ และไม่มีขั้นตอน API key`);

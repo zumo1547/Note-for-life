@@ -61,9 +61,64 @@ h1, h2, h3, .title-input, .brand strong { letter-spacing: 0; }
 .modal-options small { font-size: 12px; }
 .print-content { font-family: "Plex Thai", "Leelawadee UI", sans-serif; }
 
+.upload-status {
+  margin: 14px 1px 0;
+  color: #586b86;
+  font-size: 13px;
+}
+.upload-status[data-kind="working"] { color: #4359c0; }
+.upload-status[data-kind="error"] { color: #b43140; }
+.upload-status[data-kind="done"] { color: #177553; }
+.source-section textarea { min-height: 220px; }
+.local-ai-box {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 14px;
+}
+.local-ai-box span {
+  font-size: 12px;
+  color: #67758c;
+}
+.local-ai-box button:disabled { opacity: .5; }
+.summary-section { scroll-margin-top: 88px; }
+.sidebar-delete {
+  width: 100%;
+  padding: 8px 10px;
+  color: #9eafcb;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 12px;
+}
+.sidebar-delete:hover { color: #fff; background: #243554; }
+
+/* Keep the upload and its result visible together on common laptop screens. */
+.editor-scroll { padding-top: 20px; }
+.hero { padding: 19px 28px; align-items: center; }
+.hero .eyebrow { display: none; }
+.hero h1 { font-size: 28px; line-height: 1.23; margin: 0 0 5px; }
+.hero p { font-size: 12px; }
+.hero-steps { gap: 5px; }
+.hero-steps span { padding: 4px 10px; font-size: 11px; }
+.note-heading { margin: 16px 1px 10px; }
+.title-input { padding: 2px 0; }
+.import-section { padding-top: 18px; padding-bottom: 15px; }
+.file-drop { min-height: 86px; margin-top: 12px; }
+.file-drop-icon { font-size: 19px; }
+.upload-status { margin-top: 8px; }
+.summary-section { padding-top: 18px; }
+.summary-card { margin-top: 12px; }
+
 @media (max-width: 500px) {
-  .hero h1 { font-size: 27px; }
+  .editor-scroll { padding-top: 12px; }
+  .hero { padding: 18px 21px; }
+  .hero h1 { font-size: 24px; }
   .hero p, .section-head p { font-size: 12px; }
   .title-input { font-size: 21px; }
   .source-section textarea, .summary-card textarea { font-size: 16px; }
+  .note-heading { margin-top: 13px; }
+  .file-drop { min-height: 94px; }
 }
